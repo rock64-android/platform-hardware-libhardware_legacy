@@ -53,6 +53,11 @@ int check_wifi_preload(void)
 {
     int wififd, ret = 0;
 
+    if (check_wifi_chip_type() == RTL8723BS_VQ0) {
+        ALOGD("%s: RTL8723BS-VQ0 driver is not preload when bootup, load when open wifi.\n", __func__);
+        return 0;
+    }
+
     wififd = open(WIFI_PRELOAD_INF, O_RDONLY);
     if( wififd < 0 ) {
         ALOGD("%s: Wifi driver is not preload when bootup, load when open wifi.\n", __func__);
@@ -106,7 +111,7 @@ int check_wifi_chip_type(void)
 
     memset(buf, 0, 64);
 
-    if( 0 == read(wififd, buf, 10) ){
+    if( 0 == read(wififd, buf, 32) ){
         ALOGD("read %s failed", WIFI_CHIP_TYPE_PATH);
         close(wififd);
         goto done;
@@ -143,6 +148,12 @@ int check_wifi_chip_type(void)
         wifi_chip_type = ESP8089;
 	ALOGD("Read wifi chip type OK ! wifi_chip_type = ESP8089");
     }
+    else if (0 == strncmp(buf, "RTL8723BS_VQ0", strlen("RTL8723BS_VQ0")))
+    {
+        wifi_chip_type = RTL8723BS_VQ0;
+	ALOGD("Read wifi chip type OK ! wifi_chip_type = RTL8723BS-VQ0");
+    }
+
 done:
     return wifi_chip_type;
 }

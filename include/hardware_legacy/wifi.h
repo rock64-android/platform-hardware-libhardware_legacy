@@ -34,6 +34,7 @@ enum WIFI_CHIP_TYPE_LIST{
       RTL8723AS,
       RTL8723AU,
       RTL8723BS,
+      RTL8723BS_VQ0,
       RTL8723BU,
       RTL8192DU,
       MT6620,
