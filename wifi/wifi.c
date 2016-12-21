@@ -858,9 +858,9 @@ int wifi_change_fw_path(const char *fwpath)
 
     if (wifi_type[0] == 0)
         check_wifi_chip_type_string(wifi_type);
-    if (0 != strncmp(wifi_type, "AP", 2)) {
+    //if (0 != strncmp(wifi_type, "AP", 2)) {
         return 0;
-    }
+    //}
 
     if (!fwpath)
         return ret;
