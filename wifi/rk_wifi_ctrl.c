@@ -153,6 +153,11 @@ int check_wifi_chip_type(void)
         wifi_chip_type = RTL8723BS_VQ0;
 	ALOGD("Read wifi chip type OK ! wifi_chip_type = RTL8723BS-VQ0");
     }
+    else if (0 == strncmp(buf, "AP6330", strlen("AP6330")))
+    {
+        wifi_chip_type = AP6330;
+	ALOGD("Read wifi chip type OK ! wifi_chip_type = AP6330");
+    }
 
 done:
     return wifi_chip_type;

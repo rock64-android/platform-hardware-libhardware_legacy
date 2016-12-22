@@ -28,6 +28,7 @@ enum WIFI_CHIP_TYPE_LIST{
       RK901,
       RK903,
       AP6335,
+      AP6330,
       AP6234,
       AP6441,
       MT7601,
