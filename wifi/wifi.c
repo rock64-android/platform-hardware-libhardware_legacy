@@ -317,7 +317,7 @@ int wifi_load_driver()
 int wifi_unload_driver()
 {
 	int ret;
-    usleep(200000); /* allow to finish interface down */
+    //usleep(200000); /* allow to finish interface down */
     ALOGD("%s", __func__);
     if (check_wifi_preload() == 0) { //#ifdef WIFI_DRIVER_MODULE_PATH
         ret = rk_wifi_load_driver(0);
