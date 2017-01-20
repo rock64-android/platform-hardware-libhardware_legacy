@@ -74,6 +74,42 @@ static char primary_iface[PROPERTY_VALUE_MAX];
 // TODO: use new ANDROID_SOCKET mechanism, once support for multiple
 // sockets is in
 
+extern int ifc_up(const char *name);
+extern int ifc_down(const char *name);
+
+
+// TODO: use new ANDROID_SOCKET mechanism, once support for multiple
+// sockets is in
+#define RTL8188EU_DRIVER_MODULE_PATH "/system/lib/modules/8188eu.ko"
+#define RTL8723BU_DRIVER_MODULE_PATH "/system/lib/modules/8723bu.ko"
+#define RTL8723BS_DRIVER_MODULE_PATH "/system/lib/modules/8723bs.ko"
+#define RTL8723BS_VQ0_DRIVER_MODULE_PATH "/system/lib/modules/8723bs-vq0.ko"
+#define RTL8188FU_DRIVER_MODULE_PATH "/system/lib/modules/8188fu.ko"
+#define RTL8822BU_DRIVER_MODULE_PATH "/system/lib/modules/8822bu.ko"
+#define RTL8822BS_DRIVER_MODULE_PATH "/system/lib/modules/8822bs.ko"
+#define RTL8189ES_DRIVER_MODULE_PATH "/system/lib/modules/8189es.ko"
+#define RTL8189FS_DRIVER_MODULE_PATH "/system/lib/modules/8189fs.ko"
+#define RTL8192DU_DRIVER_MODULE_PATH "/system/lib/modules/8192du.ko"
+#define RTL8812AU_DRIVER_MODULE_PATH "/system/lib/modules/8812au.ko"
+#define SSV6051_DRIVER_MODULE_PATH   "/system/lib/modules/ssv6051.ko"
+#define ESP8089_DRIVER_MODULE_PATH   "/system/lib/modules/esp8089.ko"
+#define BCM_DRIVER_MODULE_PATH       "/system/lib/modules/bcmdhd.ko"
+#define DRIVER_MODULE_PATH_UNKNOW    ""
+
+#define RTL8822BS_DRIVER_MODULE_NAME "8822bs"
+#define RTL8188EU_DRIVER_MODULE_NAME "8188eu"
+#define RTL8723BU_DRIVER_MODULE_NAME "8723bu"
+#define RTL8723BS_DRIVER_MODULE_NAME "8723bs"
+#define RTL8723BS_VQ0_DRIVER_MODULE_NAME "8723bs_vq0"
+#define RTL8188FU_DRIVER_MODULE_NAME "8188fu"
+#define RTL8189ES_DRIVER_MODULE_NAME "8189es"
+#define RTL8189FS_DRIVER_MODULE_NAME "8189fs"
+#define RTL8192DU_DRIVER_MODULE_NAME "8192du"
+#define RTL8812AU_DRIVER_MODULE_NAME "8812au"
+#define SSV6051_DRIVER_MODULE_NAME 	 "ssv6051"
+#define ESP8089_DRIVER_MODULE_NAME 	 "esp8089"
+#define BCM_DRIVER_MODULE_NAME       "bcmdhd"
+
 #ifndef WIFI_DRIVER_MODULE_ARG
 #define WIFI_DRIVER_MODULE_ARG          ""
 #endif
@@ -122,6 +158,11 @@ static const char RTL_SUPPLICANT_NAME[] = "p2p_supp_rtl";
 static const char RTL_PROP_NAME[]       = "init.svc.p2p_supp_rtl";
 static const char ESP_SUPPLICANT_NAME[] = "p2p_supp_esp";
 static const char ESP_PROP_NAME[]       = "init.svc.p2p_supp_esp";
+static const char SSV_SUPPLICANT_NAME[]     = "ssv_wpa_supp";
+static const char SSV_SUPP_PROP_NAME[]      = "init.svc.ssv_wpa_supp";
+static const char SSV_P2P_SUPPLICANT_NAME[] = "ssv_p2p_supp";
+static const char SSV_P2P_PROP_NAME[]       = "init.svc.ssv_p2p_supp";
+
 static const char SUPP_CONFIG_TEMPLATE[]= "/system/etc/wifi/wpa_supplicant.conf";
 static const char SUPP_CONFIG_FILE[]    = "/data/misc/wifi/wpa_supplicant.conf";
 static const char P2P_CONFIG_FILE[]     = "/data/misc/wifi/p2p_supplicant.conf";
@@ -137,13 +178,46 @@ static unsigned char dummy_key[21] = { 0x02, 0x11, 0xbe, 0x33, 0x43, 0x35,
                                        0x68, 0x47, 0x84, 0x99, 0xa9, 0x2b,
                                        0x1c, 0xd3, 0xee, 0xff, 0xf1, 0xe2,
                                        0xf3, 0xf4, 0xf5 };
+typedef struct _wifi_ko_file_name
+{
+	char wifi_name[64];
+	char wifi_module_path[128];
+	char wifi_module_arg[128];
 
+}wifi_ko_file_name;
+
+#define UNKKOWN_DRIVER_MODULE_ARG ""
+#define SSV6051_DRIVER_MODULE_ARG "stacfgpath=/system/etc/firmware/ssv6051-wifi.cfg"
+wifi_ko_file_name module_list[] =
+{
+	{"RTL8723BU", RTL8723BU_DRIVER_MODULE_PATH, UNKKOWN_DRIVER_MODULE_ARG},
+	{"RTL8188EU", RTL8188EU_DRIVER_MODULE_PATH, UNKKOWN_DRIVER_MODULE_ARG},
+	{"RTL8192DU", RTL8192DU_DRIVER_MODULE_PATH, UNKKOWN_DRIVER_MODULE_ARG},
+	{"RTL8822BU", RTL8822BU_DRIVER_MODULE_PATH, UNKKOWN_DRIVER_MODULE_ARG},
+	{"RTL8822BS", RTL8822BS_DRIVER_MODULE_PATH, UNKKOWN_DRIVER_MODULE_ARG},
+	{"RTL8188FU", RTL8188FU_DRIVER_MODULE_PATH, UNKKOWN_DRIVER_MODULE_ARG},
+	{"RTL8189ES", RTL8189ES_DRIVER_MODULE_PATH, UNKKOWN_DRIVER_MODULE_ARG},
+	{"RTL8723BS", RTL8723BS_DRIVER_MODULE_PATH, UNKKOWN_DRIVER_MODULE_ARG},
+	{"RTL8812AU", RTL8812AU_DRIVER_MODULE_PATH, UNKKOWN_DRIVER_MODULE_ARG},
+	{"RTL8189FS", RTL8189FS_DRIVER_MODULE_PATH, UNKKOWN_DRIVER_MODULE_ARG},
+	{"SSV6051",     SSV6051_DRIVER_MODULE_PATH, SSV6051_DRIVER_MODULE_ARG},
+	{"ESP8089",     ESP8089_DRIVER_MODULE_PATH, UNKKOWN_DRIVER_MODULE_ARG},
+	{"AP6335",          BCM_DRIVER_MODULE_PATH, UNKKOWN_DRIVER_MODULE_ARG},
+	{"AP6330",          BCM_DRIVER_MODULE_PATH, UNKKOWN_DRIVER_MODULE_ARG},
+	{"AP6354",          BCM_DRIVER_MODULE_PATH, UNKKOWN_DRIVER_MODULE_ARG},
+	{"AP6356S",         BCM_DRIVER_MODULE_PATH, UNKKOWN_DRIVER_MODULE_ARG},
+	{"APXXX",           BCM_DRIVER_MODULE_PATH, UNKKOWN_DRIVER_MODULE_ARG},
+	{"UNKNOW",       DRIVER_MODULE_PATH_UNKNOW, UNKKOWN_DRIVER_MODULE_ARG}
+
+};
 /* Is either SUPPLICANT_NAME or P2P_SUPPLICANT_NAME */
 static char supplicant_name[PROPERTY_VALUE_MAX];
 /* Is either SUPP_PROP_NAME or P2P_PROP_NAME */
 static char supplicant_prop_name[PROPERTY_KEY_MAX];
 
 static char wifi_type[64];
+
+static int wifi_dirver_is_loaded = -1 ;
 
 static int insmod(const char *filename, const char *args)
 {
@@ -239,7 +313,7 @@ int is_wifi_driver_loaded() {
         return 0;  /* driver not loaded */
     }
 
-if (check_wifi_preload() == 0) { //#ifdef WIFI_DRIVER_MODULE_PATH
+if (check_wireless_ready() == 0) { //#ifdef WIFI_DRIVER_MODULE_PATH
     /*
      * If the property says the driver is loaded, check to
      * make sure that the property setting isn't just left
@@ -267,80 +341,73 @@ if (check_wifi_preload() == 0) { //#ifdef WIFI_DRIVER_MODULE_PATH
 
 int wifi_load_driver()
 {
-    ALOGD("%s", __func__);
-    if (check_wifi_preload() == 0) { //#ifdef WIFI_DRIVER_MODULE_PATH
-        char driver_status[PROPERTY_VALUE_MAX];
-        int count = 100; /* wait at most 20 seconds for completion */
-        
-        if (check_wireless_ready()) {
-            return 0;
+	char* wifi_ko_path = NULL ;
+	char* wifi_ko_arg =NULL;
+	int i = 0;
+	char driver_status[PROPERTY_VALUE_MAX];
+	int count = 100; /* wait at most 20 seconds for completion */
+	if (wifi_dirver_is_loaded == 1) {
+		return 0;
+	}
+	if (check_wireless_ready()) {
+		return 0;
+	}
+	ALOGD("%s", __func__);
+	if (wifi_type[0] == 0)
+		check_wifi_chip_type_string(wifi_type);
+
+	for (i=0; i< (int)(sizeof(module_list) / sizeof(module_list[0])); i++) {
+		if (!strcmp(wifi_type , module_list[i].wifi_name)) {
+			wifi_ko_path = module_list[i].wifi_module_path;
+			wifi_ko_arg = module_list[i].wifi_module_arg;
+			ALOGD("%s matched ko file path  %s", __func__, wifi_ko_path);
+			break;
+		}
+	}
+	if (wifi_ko_path == NULL) {
+		ALOGE("%s falied to find wifi driver for type=%s", __func__, wifi_type);
+		return -1;
+	}
+
+	if (insmod(wifi_ko_path, wifi_ko_arg) < 0) {
+		ALOGE("%s insmod %s failed", __func__, wifi_ko_path);
+		return -1;
+	}
+	if (strcmp(FIRMWARE_LOADER,"") == 0) {
+        /* usleep(WIFI_DRIVER_LOADER_DELAY); */
+		property_set(DRIVER_PROP_NAME, "ok");
+	}
+	else {
+		property_set("ctl.start", FIRMWARE_LOADER);
+	}
+	sched_yield();
+	while (count-- > 0) {
+	/*
+        	if (property_get(DRIVER_PROP_NAME, driver_status, NULL)) {
+        	if (strcmp(driver_status, "ok") == 0)
+        	return 0;
+        	else if (strcmp(DRIVER_PROP_NAME, "failed") == 0) {
+        	wifi_unload_driver();
+        	return -1;
+        	}
         }
-        
-        if (rk_wifi_load_driver(1) < 0) {
-            return -1;
+        */
+	if (check_wireless_ready()) {
+		property_set(DRIVER_PROP_NAME, "ok");
+		return 0;
         }
-        
-        if (strcmp(FIRMWARE_LOADER,"") == 0) {
-            /* usleep(WIFI_DRIVER_LOADER_DELAY); */
-            property_set(DRIVER_PROP_NAME, "ok");
-        }
-        else {
-            property_set("ctl.start", FIRMWARE_LOADER);
-        }
-        sched_yield();
-        while (count-- > 0) {
-            /*
-            if (property_get(DRIVER_PROP_NAME, driver_status, NULL)) {
-            if (strcmp(driver_status, "ok") == 0)
-            return 0;
-            else if (strcmp(DRIVER_PROP_NAME, "failed") == 0) {
-            wifi_unload_driver();
-            return -1;
-            }
-            }
-            */
-            if (check_wireless_ready()) {
-                property_set(DRIVER_PROP_NAME, "ok");
-                return 0;
-            }
-            usleep(200000);
-        }
-        property_set(DRIVER_PROP_NAME, "timeout");
-        wifi_unload_driver();
-        return -1;
-    } else { //#else
-        property_set(DRIVER_PROP_NAME, "ok");
-        return 0;
-    } //#endif
+        usleep(200000);
+	}
+	property_set(DRIVER_PROP_NAME, "timeout");
+	wifi_unload_driver();
+	return -1;
 }
 
 int wifi_unload_driver()
 {
-	int ret;
-    //usleep(200000); /* allow to finish interface down */
-    ALOGD("%s", __func__);
-    if (check_wifi_preload() == 0) { //#ifdef WIFI_DRIVER_MODULE_PATH
-        ret = rk_wifi_load_driver(0);
-        
-        if (ret == 0) {
-            int count = 20; /* wait at most 10 seconds for completion */
-            while (count-- > 0) {
-                //if (!is_wifi_driver_loaded())
-                if (!check_wireless_ready())
-                break;
-                usleep(500000);
-            }
-            usleep(500000); /* allow card removal */
-            if (count) {
-                return 0;
-            }
-            return -1;
-        } else
-            return -1;
-    } else { //#else
-        property_set(DRIVER_PROP_NAME, "unloaded");
-        return 0;
-    } //#endif
+	int ret = 0;
+	property_set(DRIVER_PROP_NAME, "unloaded");
+	return ret;
 }
 
 int ensure_entropy_file_exists()
@@ -467,9 +534,13 @@ int wifi_start_supplicant(int p2p_supported)
             if (!strncmp(wifi_type, "ESP", 3)) {
                 strcpy(supplicant_name, ESP_SUPPLICANT_NAME);
                 strcpy(supplicant_prop_name, ESP_PROP_NAME);
-            } else if (!strncmp(wifi_type, "RTL", 3)){
+            } else if (!strncmp(wifi_type, "RTL", 3)) {
                 strcpy(supplicant_name, RTL_SUPPLICANT_NAME);
                 strcpy(supplicant_prop_name, RTL_PROP_NAME);
+		    } else if (!strncmp(wifi_type, "SSV", 3)) {
+				ALOGD("%s: %s", __func__, SSV_P2P_SUPPLICANT_NAME);
+				strcpy(supplicant_name, SSV_P2P_SUPPLICANT_NAME);
+				strcpy(supplicant_prop_name, SSV_P2P_PROP_NAME);
             } else {
                 strcpy(supplicant_name, P2P_SUPPLICANT_NAME);
                 strcpy(supplicant_prop_name, P2P_PROP_NAME);
@@ -539,7 +610,7 @@ int wifi_start_supplicant(int p2p_supported)
                 if (strcmp(supp_status, "running") == 0) {
                     return 0;
                 } else if (strcmp(supp_status, "stopped") == 0) {
-                    return -1;
+                    //return -1;
                 }
             }
         }
@@ -560,9 +631,12 @@ int wifi_stop_supplicant(int p2p_supported)
             if (!strncmp(wifi_type, "ESP", 3)) {
                 strcpy(supplicant_name, ESP_SUPPLICANT_NAME);
                 strcpy(supplicant_prop_name, ESP_PROP_NAME);
-            } else if (!strncmp(wifi_type, "RTL", 3)){
+            } else if (!strncmp(wifi_type, "RTL", 3)) {
                 strcpy(supplicant_name, RTL_SUPPLICANT_NAME);
                 strcpy(supplicant_prop_name, RTL_PROP_NAME);
+			} else if (!strncmp(wifi_type, "SSV", 3)) {
+				strcpy(supplicant_name, SSV_P2P_SUPPLICANT_NAME);
+				strcpy(supplicant_prop_name, SSV_P2P_PROP_NAME);
             } else {
                 strcpy(supplicant_name, P2P_SUPPLICANT_NAME);
                 strcpy(supplicant_prop_name, P2P_PROP_NAME);
@@ -858,7 +932,7 @@ int wifi_change_fw_path(const char *fwpath)
 
     if (wifi_type[0] == 0)
         check_wifi_chip_type_string(wifi_type);
-    if (0 != strncmp(wifi_type, "AP", 2) || check_wifi_chip_type() == AP6330) {
+    if (0 != strncmp(wifi_type, "AP", 2) || !strcmp(wifi_type, "AP6330")) {
         return 0;
     }
 
