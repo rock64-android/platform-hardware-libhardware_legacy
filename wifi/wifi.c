@@ -611,7 +611,7 @@ int wifi_start_supplicant(int p2p_supported)
                 if (strcmp(supp_status, "running") == 0) {
                     return 0;
                 } else if (strcmp(supp_status, "stopped") == 0) {
-                    return -1;
+                    //return -1;
                 }
             }
         }
