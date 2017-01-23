@@ -215,7 +215,7 @@ static char supplicant_name[PROPERTY_VALUE_MAX];
 /* Is either SUPP_PROP_NAME or P2P_PROP_NAME */
 static char supplicant_prop_name[PROPERTY_KEY_MAX];
 
-static char wifi_type[64];
+static char wifi_type[64] = {0};
 
 static int wifi_dirver_is_loaded = -1 ;
 
@@ -350,6 +350,7 @@ int wifi_load_driver()
 		return 0;
 	}
 	if (check_wireless_ready()) {
+		wifi_dirver_is_loaded = 1;
 		return 0;
 	}
 	ALOGD("%s", __func__);
@@ -610,7 +611,7 @@ int wifi_start_supplicant(int p2p_supported)
                 if (strcmp(supp_status, "running") == 0) {
                     return 0;
                 } else if (strcmp(supp_status, "stopped") == 0) {
-                    //return -1;
+                    return -1;
                 }
             }
         }
