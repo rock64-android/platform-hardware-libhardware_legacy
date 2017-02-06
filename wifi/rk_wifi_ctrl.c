@@ -336,27 +336,35 @@ int rk_wifi_load_driver(int enable)
 /* 0 - not ready; 1 - ready. */
 int check_wireless_ready(void)
 {
-    char line[1024], *ptr = NULL;
-    FILE *fp = NULL;
+	char line[1024], *ptr = NULL;
+	FILE *fp = NULL;
 
-    fp = fopen("/proc/net/wireless", "r");
-    if (fp == NULL) {
-        ALOGE("Couldn't open /proc/net/wireless\n");
-        return 0;
-    }
+	if (get_kernel_version() == KERNEL_VERSION_4_4) {
+		fp = fopen("/proc/net/dev", "r");
+		if (fp == NULL) {
+			ALOGE("Couldn't open /proc/net/dev\n");
+			return 0;
+		}
+	} else if (get_kernel_version() == KERNEL_VERSION_3_10) {
+		fp = fopen("/proc/net/wireless", "r");
+		if (fp == NULL) {
+			ALOGE("Couldn't open /proc/net/wireless\n");
+			return 0;
+    		}
+	}
 
-    while(fgets(line, 1024, fp)) {
-        if ((strstr(line, "wlan0:") != NULL) || (strstr(line, "p2p0:") != NULL)) {
-            ALOGD("Wifi driver is ready for now...");
-            fclose(fp);
-            return 1;
-        }
-    }
+	while(fgets(line, 1024, fp)) {
+		if ((strstr(line, "wlan0:") != NULL) || (strstr(line, "p2p0:") != NULL)) {
+			ALOGD("Wifi driver is ready for now...");
+			fclose(fp);
+			return 1;
+		}
+	}
 
-    fclose(fp);
+	fclose(fp);
 
-    ALOGE("Wifi driver is not ready.\n");
-    return 0;
+	ALOGE("Wifi driver is not ready.\n");
+	return 0;
 }
 
 int get_kernel_version(void)
@@ -379,6 +387,9 @@ int get_kernel_version(void)
     if (strstr(buf, "Linux version 3.10") != NULL) {
         version = KERNEL_VERSION_3_10;
         ALOGD("Kernel version is 3.10.");
+    } else if (strstr(buf, "Linux version 4.4") != NULL) {
+	version = KERNEL_VERSION_4_4;
+	ALOGD("Kernel version is 4.4.");
     } else {
         version = KERNEL_VERSION_3_0_36;
         ALOGD("Kernel version is 3.0.36.");

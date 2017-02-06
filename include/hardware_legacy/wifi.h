@@ -47,6 +47,7 @@ enum {
     KERNEL_VERSION_3_0_8 = 1,
     KERNEL_VERSION_3_0_36,
     KERNEL_VERSION_3_10,
+    KERNEL_VERSION_4_4,
 };
 
 int check_wifi_chip_type(void);
