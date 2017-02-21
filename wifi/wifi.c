@@ -169,6 +169,7 @@ static const char P2P_CONFIG_FILE[]     = "/data/misc/wifi/p2p_supplicant.conf";
 static const char CONTROL_IFACE_PATH[]  = "/data/misc/wifi/sockets";
 static const char MODULE_FILE[]         = "/proc/modules";
 
+static const char RECOGNIZE_WIFI_CHIP[] = "/data/wifi_chip";
 static const char IFNAME[]              = "IFNAME=";
 #define IFNAMELEN			(sizeof(IFNAME) - 1)
 static const char WPA_EVENT_IGNORE[]    = "CTRL-EVENT-IGNORE ";
@@ -339,6 +340,49 @@ if (check_wireless_ready() == 0) { //#ifdef WIFI_DRIVER_MODULE_PATH
 } //#endif
 }
 
+int save_wifi_chip_type(char *type)
+{
+	int ret, found;
+	int fd;
+	char buf[64];
+
+	ret = access(RECOGNIZE_WIFI_CHIP, R_OK|W_OK);
+
+	if ((ret == 0) || (errno == EACCES)) {
+		if ((ret != 0) && (chmod(RECOGNIZE_WIFI_CHIP, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) != 0)) {
+			ALOGE("Cannot set RW to \"%s\": %s", RECOGNIZE_WIFI_CHIP, strerror(errno));
+			return -1;
+		}
+		ALOGD("%s is exit\n", RECOGNIZE_WIFI_CHIP);
+		return 0;
+	}
+
+	fd = TEMP_FAILURE_RETRY(open(RECOGNIZE_WIFI_CHIP, O_CREAT|O_RDWR, 0664));
+	if (fd < 0) {
+		ALOGE("Cannot create \"%s\": %s", RECOGNIZE_WIFI_CHIP, strerror(errno));
+		return -1;
+	}
+	ALOGD("%s is not exit,save wifi chip\n", RECOGNIZE_WIFI_CHIP);
+	strcpy(buf, type);
+	ALOGD("recognized wifi chip = %s, save to %s\n", buf, RECOGNIZE_WIFI_CHIP);
+	if (TEMP_FAILURE_RETRY(write(fd, buf, strlen(buf)+1)) != strlen(buf)+1) {
+		ALOGE("Error writing \"%s\": %s", RECOGNIZE_WIFI_CHIP, strerror(errno));
+		close(fd);
+		return -1;
+	}
+	close(fd);
+	if (chmod(RECOGNIZE_WIFI_CHIP, 0664) < 0) {
+		ALOGE("Error changing permissions of %s to 0664: %s",RECOGNIZE_WIFI_CHIP, strerror(errno));
+		unlink(RECOGNIZE_WIFI_CHIP);
+		return -1;
+	}
+	if (chown(RECOGNIZE_WIFI_CHIP, AID_SYSTEM, AID_WIFI) < 0) {
+		ALOGE("Error changing group ownership of %s to %d: %s",RECOGNIZE_WIFI_CHIP, AID_WIFI, strerror(errno));
+		unlink(RECOGNIZE_WIFI_CHIP);
+		return -1;
+	}
+	return 1;
+}
 int wifi_load_driver()
 {
 	char* wifi_ko_path = NULL ;
@@ -354,9 +398,10 @@ int wifi_load_driver()
 		return 0;
 	}
 	ALOGD("%s", __func__);
-	if (wifi_type[0] == 0)
+	if (wifi_type[0] == 0) {
 		check_wifi_chip_type_string(wifi_type);
-
+		save_wifi_chip_type(wifi_type);
+	}
 	for (i=0; i< (int)(sizeof(module_list) / sizeof(module_list[0])); i++) {
 		if (!strcmp(wifi_type , module_list[i].wifi_name)) {
 			wifi_ko_path = module_list[i].wifi_module_path;
