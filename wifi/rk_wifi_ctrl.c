@@ -63,7 +63,7 @@ typedef struct _wifi_devices
 }wifi_device;
 
 static wifi_device supported_wifi_devices[] = {
-	{"RTL8188EU",  "0bda:0179"},
+	{"RTL8188EU",  "0bda:8179"},
 	{"RTL8723BU",  "0bda:b720"},
 	{"RTL8723BS",  "024c:b723"},
 	{"RTL8822BS",  "024c:b822"},
