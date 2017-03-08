@@ -54,35 +54,41 @@ static int identify_sucess = -1;
 static char recoginze_wifi_chip[64];
 static const char USB_DIR[] = "/sys/bus/usb/devices";
 static const char SDIO_DIR[]= "/sys/bus/sdio/devices";
+static const char PCIE_DIR[]= "/sys/bus/pci/devices";
+
+static const char PREFIX_SDIO[] = "SDIO_ID=";
+static const char PREFIX_PCIE[] = "PCI_ID=";
+static const char PREFIX_USB[] = "PRODUCT=";
+
 static int invalid_wifi_device_id = -1;
 
 typedef struct _wifi_devices
 {
   char wifi_name[64];
   char wifi_vid_pid[64];
-}wifi_device;
+} wifi_device;
 
 static wifi_device supported_wifi_devices[] = {
-	{"RTL8188EU",  "0bda:8179"},
-	{"RTL8723BU",  "0bda:b720"},
-	{"RTL8723BS",  "024c:b723"},
-	{"RTL8822BS",  "024c:b822"},
-	{"RTL8188FU",  "0bda:f179"},
-	{"RTL8822BU",  "0bda:b82c"},
-	{"RTL8189ES",  "024c:8179"},
-	{"RTL8189FS",  "024c:f179"},
-	{"RTL8192DU",  "0bda:8194"},
-	{"RTL8812AU",  "0bda:8812"},
-	{"SSV6051",    "3030:3030"},
-	{"ESP8089",    "6666:1111"},
-	{"AP6354",     "02d0:4354"},
-	{"AP6330",     "02d0:4330"},
-	{"AP6356S",    "02d0:4356"},
-	{"AP6335",     "02d0:4335"}
+	{"RTL8188EU",	"0bda:8179"},
+	{"RTL8723BU",	"0bda:b720"},
+	{"RTL8723BS",	"024c:b723"},
+	{"RTL8822BS",	"024c:b822"},
+	{"RTL8188FU",	"0bda:f179"},
+	{"RTL8822BU",	"0bda:b82c"},
+	{"RTL8189ES",	"024c:8179"},
+	{"RTL8189FS",	"024c:f179"},
+	{"RTL8192DU",	"0bda:8194"},
+	{"RTL8812AU",	"0bda:8812"},
+	{"SSV6051",	"3030:3030"},
+	{"ESP8089",	"6666:1111"},
+	{"AP6354",	"02d0:4354"},
+	{"AP6330",	"02d0:4330"},
+	{"AP6356S",	"02d0:4356"},
+	{"AP6335",	"02d0:4335"},
+	{"RTL8822BE",	"10ec:b822"},
 };
 
-
-int wifi_get_usb_device_id(void)
+int get_wifi_device_id(const char *bus_dir, const char *prefix)
 {
 	int idnum;
 	int i = 0;
@@ -91,119 +97,61 @@ int wifi_get_usb_device_id(void)
 	struct dirent *next;
 	FILE *fp = NULL;
 	idnum = sizeof(supported_wifi_devices) / sizeof(supported_wifi_devices[0]);
-	dir = opendir(USB_DIR);
+	dir = opendir(bus_dir);
 	if (!dir) {
 		ALOGE("open dir failed: %s", strerror(errno));
 		return invalid_wifi_device_id;
 	}
+
 	while ((next = readdir(dir)) != NULL) {
 		char line[256];
 		char uevent_file[256] = {0};
-		sprintf(uevent_file, "%s/%s/uevent", USB_DIR, next->d_name);
-		ALOGD("uevent path:%s", uevent_file);
+		sprintf(uevent_file, "%s/%s/uevent", bus_dir, next->d_name);
+		ALOGV("uevent path:%s", uevent_file);
 		fp = fopen(uevent_file, "r");
 		if (NULL == fp) {
 			continue;
 		}
-	while (fgets(line, sizeof(line), fp)) {
-		char *pos = NULL;
-		int product_vid;
-		int product_did;
-		int producd_bcddev;
-		char temp[10] = {0};
-		pos = strstr(line, "PRODUCT=");
-		if(pos != NULL) {
-			if (sscanf(pos + 8, "%x/%x/%x", &product_vid, &product_did, &producd_bcddev)  <= 0)
-				continue;
-			sprintf(temp, "%04x:%04x", product_vid, product_did);
-			for (i = 0; i < idnum; i++) {
-				if (0 == strncmp(temp, supported_wifi_devices[i].wifi_vid_pid, 9)) {
-					ALOGD("pid:vid : %s", temp);
-					strcpy(recoginze_wifi_chip,supported_wifi_devices[i].wifi_name);
-					identify_sucess = 1 ;
-					ret = 0;
-					break;
-				} else {
-					strcpy(recoginze_wifi_chip,"UNKNOW");
-					identify_sucess = -1;
-					ret = invalid_wifi_device_id;
+
+		while (fgets(line, sizeof(line), fp)) {
+			char *pos = NULL;
+			int product_vid = 0;
+			int product_did = 0;
+			int producd_bcddev = 0;
+			char temp[10] = {0};
+			pos = strstr(line, prefix);
+			ALOGV("line: %s, prefix: %s.\n", line, prefix);
+			if (pos != NULL) {
+				if (strncmp(bus_dir, USB_DIR, sizeof(USB_DIR)) == 0)
+					sscanf(pos + 8, "%x/%x/%x", &product_vid, &product_did, &producd_bcddev);
+				else if (strncmp(bus_dir, SDIO_DIR, sizeof(SDIO_DIR)) == 0)
+					sscanf(pos + 8, "%x:%x", &product_vid, &product_did);
+				else if (strncmp(bus_dir, PCIE_DIR, sizeof(PCIE_DIR)) == 0)
+					sscanf(pos + 7, "%x:%x", &product_vid, &product_did);
+				else
+					return invalid_wifi_device_id;
+
+				sprintf(temp, "%04x:%04x", product_vid, product_did);
+				ALOGV("pid:vid : %s", temp);
+				for (i = 0; i < idnum; i++) {
+					if (0 == strncmp(temp, supported_wifi_devices[i].wifi_vid_pid, 9)) {
+						ALOGD("found it pid:vid : %s", temp);
+						strcpy(recoginze_wifi_chip, supported_wifi_devices[i].wifi_name);
+						identify_sucess = 1 ;
+						ret = 0;
+						fclose(fp);
+						goto ready;
+					}
 				}
 			}
 		}
-
-		if (ret != invalid_wifi_device_id)
-			break;
+		fclose(fp);
 	}
 
-	fclose(fp);
-
-	if (ret != invalid_wifi_device_id)
-		break;
-	}
-
+	ret = invalid_wifi_device_id;
+ready:
 	closedir(dir);
-	ALOGD("usb detectd return ret:%d", ret);
-	return ret;
-}
-
-
-int wifi_get_sdio_device_id(void)
-{
-	int idnum;
-	int i = 0;
-	int ret = invalid_wifi_device_id;
-	DIR *dir;
-	struct dirent *next;
-	FILE *fp = NULL;
-	idnum = sizeof(supported_wifi_devices) / sizeof(supported_wifi_devices[0]);
-	dir = opendir(SDIO_DIR);
-	if (!dir) {
-		ALOGE("open dir failed: %s", strerror(errno));
-		return invalid_wifi_device_id;
-	}
-	while ((next = readdir(dir)) != NULL) {
-		char line[256];
-		char uevent_file[256] = {0};
-		sprintf(uevent_file, "%s/%s/uevent", SDIO_DIR, next->d_name);
-		ALOGD("uevent path:%s", uevent_file);
-		fp = fopen(uevent_file, "r");
-		if (NULL == fp) {
-			continue;
-	}
-        while (fgets(line, sizeof(line), fp)) {
-		char *pos = NULL;
-		int product_vid;
-		int product_did;
-		char temp[10] = {0};
-		pos = strstr(line, "SDIO_ID=");
-		if(pos != NULL) {
-			if (sscanf(pos + 8, "%x:%x", &product_vid, &product_did)  <= 0)
-				continue;
-			sprintf(temp, "%04x:%04x", product_vid, product_did);
-			for (i = 0; i < idnum; i++) {
-				if (0 == strncmp(temp, supported_wifi_devices[i].wifi_vid_pid, 9)) {
-					ALOGD("pid:vid : %s", temp);
-					strcpy(recoginze_wifi_chip,supported_wifi_devices[i].wifi_name);
-					identify_sucess = 1 ;
-					ret = 0;
-					break;
-				} else {
-					ALOGD("pid:vid : %s", temp);
-					strcpy(recoginze_wifi_chip,"UNKNOW");
-					identify_sucess = -1;
-					ret = invalid_wifi_device_id;
-				}
-			}
-		}
-	if (ret != invalid_wifi_device_id)
-		break;
-        }
-	fclose(fp);
-	if (ret != invalid_wifi_device_id)
-		break;
-	}
-	closedir(dir);
-	ALOGD("SDIO detectd return ret:%d", ret);
+	ALOGD("wifi detectd return ret:%d", ret);
 	return ret;
 }
 
@@ -223,25 +171,23 @@ int check_wifi_preload(void)
 
 int check_wifi_chip_type_string(char *type)
 {
-    int sdio_ret = -1;
-    if (identify_sucess == -1) {
-        if (wifi_get_usb_device_id() == 0) {
-            ALOGD("USB WIFI identify sucess");
-        } else {
-            sdio_ret = wifi_get_sdio_device_id();
-            if (sdio_ret == 0 ) {
-                ALOGD("sdio WIFI identify sucess");
-            } else if (sdio_ret == -1) {
-                ALOGD("maybe there is no usb wifi or sdio wifi,set default wifi module Brocom APXXX");
-                strcpy(recoginze_wifi_chip,"APXXX");
-                identify_sucess = 1 ;
-            }
+	if (identify_sucess == -1) {
+		if (get_wifi_device_id(SDIO_DIR, PREFIX_SDIO) == 0)
+			ALOGD("SDIO WIFI identify sucess");
+		else if (get_wifi_device_id(USB_DIR, PREFIX_USB) == 0)
+			ALOGD("USB WIFI identify sucess");
+		else if (get_wifi_device_id(PCIE_DIR, PREFIX_PCIE) == 0)
+			ALOGD("PCIE WIFI identify sucess");
+		else {
+			ALOGD("maybe there is no usb wifi or sdio or pcie wifi,set default wifi module Brocom APXXX");
+			strcpy(recoginze_wifi_chip, "APXXX");
+			identify_sucess = 1 ;
+		}
 	}
-    }
-    strcpy(type, recoginze_wifi_chip);
-    ALOGD("%s: %s", __func__, type);
-    return 0;
 
+	strcpy(type, recoginze_wifi_chip);
+	ALOGD("%s: %s", __func__, type);
+	return 0;
 }
 
 
