@@ -107,7 +107,7 @@ int get_wifi_device_id(const char *bus_dir, const char *prefix)
 		char line[256];
 		char uevent_file[256] = {0};
 		sprintf(uevent_file, "%s/%s/uevent", bus_dir, next->d_name);
-		ALOGV("uevent path:%s", uevent_file);
+		ALOGD("uevent path:%s", uevent_file);
 		fp = fopen(uevent_file, "r");
 		if (NULL == fp) {
 			continue;
@@ -135,7 +135,7 @@ int get_wifi_device_id(const char *bus_dir, const char *prefix)
 				ALOGV("pid:vid : %s", temp);
 				for (i = 0; i < idnum; i++) {
 					if (0 == strncmp(temp, supported_wifi_devices[i].wifi_vid_pid, 9)) {
-						ALOGD("found it pid:vid : %s", temp);
+						ALOGD("found device pid:vid : %s", temp);
 						strcpy(recoginze_wifi_chip, supported_wifi_devices[i].wifi_name);
 						identify_sucess = 1 ;
 						ret = 0;
