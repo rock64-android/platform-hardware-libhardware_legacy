@@ -73,6 +73,8 @@ static wifi_device supported_wifi_devices[] = {
 	{"RTL8723BU",	"0bda:b720"},
 	{"RTL8723BS",	"024c:b723"},
 	{"RTL8822BS",	"024c:b822"},
+	{"RTL8723CS",	"024c:b703"},
+	{"RTL8723DS",	"024c:d723"},
 	{"RTL8188FU",	"0bda:f179"},
 	{"RTL8822BU",	"0bda:b82c"},
 	{"RTL8189ES",	"024c:8179"},
